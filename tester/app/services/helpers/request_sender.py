@@ -1,6 +1,7 @@
 import httpx
 
 from app.core.config import config
+from app.core.decorators import log_execution
 from app.core.logger import logger
 
 class RequestSender:
@@ -9,6 +10,7 @@ class RequestSender:
         self.backdoor_header = config.BACKDOOR_ACCESS_HEADER
         self.backdoor_value = config.BACKDOOR_ACCESS_VALUE
 
+    @log_execution
     async def send(self, payload: dict) -> dict:
         logger.info(f"Sending request to {self.forward_url} with payload: {payload}")
 

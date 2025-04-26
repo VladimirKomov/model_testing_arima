@@ -5,3 +5,4 @@
 /demand-planning-engine/
 /tester/.env
 /tester/app/logs/tester.log
+/tester/app/logs/tester_errors.log

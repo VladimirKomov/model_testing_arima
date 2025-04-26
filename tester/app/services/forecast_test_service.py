@@ -1,10 +1,17 @@
+import os
+from datetime import datetime
+
+from app.schemas.forecast_test_result import ForecastTestResult
 from app.services.helpers.request_sender import RequestSender
 from app.services.helpers.db_fetcher import DBFetcher
 from app.services.repositories.forecast_result_repository import ForecastResultRepository
 from app.schemas.request_schema import ForecastRequest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-class ForecastTestService:
+from app.utils.save_to_excel import save_forecast_test_result_to_excel
+
+
+class ForecastTestServiceInitialLaunch:
     def __init__(self, forward_url: str):
         self.forward_url = forward_url
 
@@ -19,11 +26,12 @@ class ForecastTestService:
         if "error" in response:
             return response
 
-        # # 2. Make requests to the database
-        # db_data = await fetcher.fetch_data()
-        #
-        # # 3. Changing parameters in the database
-        # await repository.save(db_data)
+        # 2. Make requests to the database
+        db_data: ForecastTestResult = await fetcher.fetch_data()
+
+        # 3. Save to Excel in a separate folder
+        save_forecast_test_result_to_excel(db_data)
+
 
         #return {"status": "completed", "data": db_data}
         return {"status": "completed"}

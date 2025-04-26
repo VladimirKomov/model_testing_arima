@@ -3,7 +3,6 @@ from dataclasses import dataclass, asdict
 
 @dataclass
 class ForecastTestResult:
-    forecast_data: List[Dict[str, Any]]
     forecast_overall: List[Dict[str, Any]]
     top_offenders: List[Dict[str, Any]]
     top_offenders_details: List[Dict[str, Any]]
