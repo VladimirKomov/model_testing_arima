@@ -1,10 +1,23 @@
-from sqlalchemy import Integer, JSON, Column
+from sqlalchemy import Column, Integer, Text, String, Boolean, ForeignKey
 
 from app.databases.postgresql import Base
 
 
-class ForecastResult(Base):
-    __tablename__ = "forecast_results"
+class ForecastSegmentModelParameter(Base):
+    __tablename__ = "forecast_segment_model_params"
 
-    id = Column(Integer, primary_key=True, index=True)
-    result = Column(JSON)
+    forecast_segment_model_id = Column(
+        Integer,
+        ForeignKey("forecast_segment_models.id"),
+        primary_key=True
+    )
+    parameter_id = Column(
+        Integer,
+        ForeignKey("forecast_parameters.id"),
+        primary_key=True
+    )
+    value = Column(Text, nullable=False)
+
+    use_bayesian_optimization = Column(Boolean, nullable=True)
+    feature_as_columns = Column(Boolean, nullable=True)
+    value_options = Column(String(100), nullable=True)

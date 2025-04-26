@@ -1,13 +1,12 @@
-import os
-from datetime import datetime
+from sys import prefix
 
-from app.schemas.forecast_test_result import ForecastTestResult
-from app.services.helpers.request_sender import RequestSender
-from app.services.helpers.db_fetcher import DBFetcher
-from app.services.repositories.forecast_result_repository import ForecastResultRepository
-from app.schemas.request_schema import ForecastRequest
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.schemas.forecast_test_result import ForecastTestResult
+from app.schemas.request_schema import ForecastInitialRequest
+from app.services.helpers.db_fetcher import DBFetcher
+from app.services.helpers.request_sender import RequestSender
+from app.services.repositories.forecast_result_repository import ForecastResultRepository
 from app.utils.save_to_excel import save_forecast_test_result_to_excel
 
 
@@ -15,7 +14,7 @@ class ForecastTestServiceInitialLaunch:
     def __init__(self, forward_url: str):
         self.forward_url = forward_url
 
-    async def run(self, request_data: ForecastRequest, db: AsyncSession):
+    async def run(self, request_data: ForecastInitialRequest, db: AsyncSession):
         sender = RequestSender(self.forward_url)
         fetcher = DBFetcher(db)
         repository = ForecastResultRepository(db)
@@ -27,11 +26,15 @@ class ForecastTestServiceInitialLaunch:
             return response
 
         # 2. Make requests to the database
-        db_data: ForecastTestResult = await fetcher.fetch_data()
+        db_data: ForecastTestResult
+        item_ids: list[int]
+        db_data, item_ids = await fetcher.fetch_initial_data()
 
         # 3. Save to Excel in a separate folder
-        save_forecast_test_result_to_excel(db_data)
+        pref = 'initial_test_results'
+        save_forecast_test_result_to_excel(db_data, prefix=pref)
 
-
-        #return {"status": "completed", "data": db_data}
-        return {"status": "completed"}
+        return {
+            "status": "completed",
+            "item_ids": item_ids
+        }

@@ -1,13 +1,14 @@
 import datetime
-from typing import Optional
+import os
+from typing import Optional, Sequence
 
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.decorators import log_execution
 from app.core.logger import logger
 from app.schemas.forecast_test_result import ForecastTestResult
-import os
+
 
 def load_query(file_name: str) -> str:
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
@@ -16,6 +17,7 @@ def load_query(file_name: str) -> str:
         raise FileNotFoundError(f"Query file '{file_name}' not found at '{query_path}'")
     with open(query_path, "r", encoding="utf-8") as file:
         return file.read()
+
 
 class DBFetcher:
     def __init__(self, db: AsyncSession):
@@ -26,16 +28,36 @@ class DBFetcher:
         result = await self.db.execute(text(query), params)
         return [dict(row) for row in result.mappings().all()]
 
-    @log_execution
-    async def fetch_data(
-            self,
-            start_date: Optional[str] = None,
-            end_date: Optional[str] = None,
-            segment_id: Optional[int] = None,
-    ) -> ForecastTestResult:
-        logger.info("Starting database fetching...")
+    async def _fetch_forecast_overall(self, start_date: datetime.date, end_date: datetime.date, segment_id: int) -> \
+            list[dict]:
+        query = load_query("forecast_overall_query.sql")
+        params = {
+            "start_date": start_date,
+            "end_date": end_date,
+            "segment_id": segment_id,
+        }
+        return await self._fetch_all_as_dicts(query, params)
 
-        # Set default values if they are not passed
+    async def _fetch_top_offenders(self, start_date: datetime.date, end_date: datetime.date, segment_id: int) -> list[
+        dict]:
+        query = load_query("forecast_top_offenders_query.sql")
+        params = {
+            "start_date": start_date,
+            "end_date": end_date,
+            "segment_id": segment_id,
+        }
+        return await self._fetch_all_as_dicts(query, params)
+
+    async def _fetch_top_offenders_details(self, segment_id: int, item_ids: Sequence[int]) -> list[dict]:
+        query = load_query("forecast_top_offenders_detail_query.sql")
+        params = {
+            "segment_id": segment_id,
+            "item_ids": item_ids,
+        }
+        return await self._fetch_all_as_dicts(query, params)
+
+    def _ensure_dates(self, start_date: Optional[str], end_date: Optional[str]) -> tuple[datetime.date, datetime.date]:
+        """Ensure that dates are datetime.date, not str."""
         if start_date is None:
             start_date = datetime.date(2025, 2, 1)
         elif isinstance(start_date, str):
@@ -46,44 +68,66 @@ class DBFetcher:
         elif isinstance(end_date, str):
             end_date = datetime.date.fromisoformat(end_date)
 
+        return start_date, end_date
+
+    @log_execution
+    async def fetch_initial_data(
+            self,
+            start_date: Optional[str] = None,
+            end_date: Optional[str] = None,
+            segment_id: Optional[int] = None,
+    ) -> tuple[ForecastTestResult, list[int]]:
+        logger.info("Starting database fetching...")
+
         if segment_id is None:
             segment_id = 2
 
-        # 1. Overall query
-        forecast_overall = await self._fetch_all_as_dicts(
-            load_query("forecast_overall_query.sql"),
-            {
-                "start_date": start_date,
-                "end_date": end_date,
-                "segment_id": segment_id,
-            }
-        )
+        start_date, end_date = self._ensure_dates(start_date, end_date)
 
-        # 2. Топ offenders
-        top_offenders = await self._fetch_all_as_dicts(
-            load_query("forecast_top_offenders_query.sql"),
-            {
-                "start_date": start_date,
-                "end_date": end_date,
-                "segment_id": segment_id,
-            }
-        )
+        forecast_overall = await self._fetch_forecast_overall(start_date, end_date, segment_id)
+        top_offenders = await self._fetch_top_offenders(start_date, end_date, segment_id)
 
-        # 3. Detail by offenders
-        item_ids = tuple(offender["item"] for offender in top_offenders)
+        item_ids = tuple(int(offender["item"]) for offender in top_offenders)
 
-        top_offenders_details = await self._fetch_all_as_dicts(
-            load_query("forecast_top_offenders_detail_query.sql"),
-            {
-                "segment_id": segment_id,
-                "item_ids": item_ids,
-            }
-        )
+        top_offenders_details = await self._fetch_top_offenders_details(segment_id, item_ids)
 
         logger.success("Database fetching completed!")
 
-        return ForecastTestResult(
+        forecast_test_result = ForecastTestResult(
             forecast_overall=forecast_overall,
             top_offenders=top_offenders,
+            top_offenders_details=top_offenders_details,
+        )
+
+        return forecast_test_result, list(item_ids)
+
+    @log_execution
+    async def fetch_test_run_data(
+            self,
+            item_ids: list[int],
+            start_date: Optional[str] = None,
+            end_date: Optional[str] = None,
+            segment_id: Optional[int] = None,
+    ) -> ForecastTestResult:
+        """Fetch forecast_overall and top_offenders_details for given item_ids."""
+        logger.info("Starting test run data fetching...")
+
+        if segment_id is None:
+            segment_id = 2
+
+        start_date, end_date = self._ensure_dates(start_date, end_date)
+
+        # Fetch overall forecast
+        forecast_overall = await self._fetch_forecast_overall(start_date, end_date, segment_id)
+
+        # Fetch top offenders details only for provided item_ids
+        top_offenders_details = await self._fetch_top_offenders_details(segment_id, item_ids)
+
+        logger.success("Test run data fetching completed!")
+
+        return ForecastTestResult(
+            forecast_overall=forecast_overall,
+            # We skip top_offenders in this case
+            top_offenders=[],
             top_offenders_details=top_offenders_details,
         )
