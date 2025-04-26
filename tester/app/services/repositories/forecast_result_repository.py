@@ -35,7 +35,7 @@ class ForecastResultRepository:
 
     async def apply_parameter_updates(self, updates: List[ParameterUpdate]) -> None:
         """Apply new parameter values to the database."""
-        logger.info("Saving the results in the database...")
+        logger.info("Saving parameters in the database...")
         for update_item in updates:
             update_stmt = (
                 update(ForecastSegmentModelParameter)

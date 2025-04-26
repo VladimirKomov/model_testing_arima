@@ -1,13 +1,10 @@
-from sys import prefix
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.forecast_test_result import ForecastTestResult
 from app.schemas.request_schema import ForecastInitialRequest
 from app.services.helpers.db_fetcher import DBFetcher
 from app.services.helpers.request_sender import RequestSender
-from app.services.repositories.forecast_result_repository import ForecastResultRepository
-from app.utils.save_to_excel import save_forecast_test_result_to_excel
+from app.utils.save_to_excel import ForecastResultSaver
 
 
 class ForecastTestServiceInitialLaunch:
@@ -17,7 +14,7 @@ class ForecastTestServiceInitialLaunch:
     async def run(self, request_data: ForecastInitialRequest, db: AsyncSession):
         sender = RequestSender(self.forward_url)
         fetcher = DBFetcher(db)
-        repository = ForecastResultRepository(db)
+        result_saver = ForecastResultSaver()
 
         # 1. Sending a request
         response = await sender.send(request_data.model_dump())
@@ -32,7 +29,10 @@ class ForecastTestServiceInitialLaunch:
 
         # 3. Save to Excel in a separate folder
         pref = 'initial_test_results'
-        save_forecast_test_result_to_excel(db_data, prefix=pref)
+        result_saver.save(
+            result=db_data,
+            prefix=pref
+        )
 
         return {
             "status": "completed",

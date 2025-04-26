@@ -80,7 +80,7 @@ class DBFetcher:
         logger.info("Starting database fetching...")
 
         if segment_id is None:
-            segment_id = 2
+            segment_id = 0
 
         start_date, end_date = self._ensure_dates(start_date, end_date)
 
@@ -113,7 +113,7 @@ class DBFetcher:
         logger.info("Starting test run data fetching...")
 
         if segment_id is None:
-            segment_id = 2
+            segment_id = 0
 
         start_date, end_date = self._ensure_dates(start_date, end_date)
 
