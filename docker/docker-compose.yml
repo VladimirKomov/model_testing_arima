@@ -1,0 +1,21 @@
+# project name
+name: model_testing_arima
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: pg-bk-db
+    ports:
+      - "55432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - model_testing_arima_arima_network
+
+networks:
+  model_testing_arima_arima_network:
+    external: true

@@ -1,0 +1,9 @@
+# project name
+name: model_testing_arima
+
+volumes:
+  pg_data:
+
+networks:
+  arima_network:
+    driver: bridge

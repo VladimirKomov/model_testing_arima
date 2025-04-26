@@ -1,0 +1,7 @@
+/.idea/
+/dump/emerson_bk
+/MYSQL-REST-API/
+/docker/.env
+/demand-planning-engine/
+/tester/.env
+/tester/app/logs/tester.log
