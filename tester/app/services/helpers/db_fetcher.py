@@ -56,19 +56,19 @@ class DBFetcher:
         }
         return await self._fetch_all_as_dicts(query, params)
 
-    def _ensure_dates(self, start_date: Optional[str], end_date: Optional[str]) -> tuple[datetime.date, datetime.date]:
-        """Ensure that dates are datetime.date, not str."""
-        if start_date is None:
-            start_date = datetime.date(2025, 2, 1)
-        elif isinstance(start_date, str):
-            start_date = datetime.date.fromisoformat(start_date)
+    def _ensure_dates(
+            self,
+            start_date: Optional[str],
+            end_date: Optional[str],
+            segment_id: Optional[int]
+    ) -> tuple[datetime.date, datetime.date, int]:
+        """Ensure that dates are datetime.date, and segment_id is int."""
 
-        if end_date is None:
-            end_date = datetime.date(2025, 3, 31)
-        elif isinstance(end_date, str):
-            end_date = datetime.date.fromisoformat(end_date)
+        start_date = datetime.date.fromisoformat(start_date) if isinstance(start_date, str) else start_date or datetime.date(2025, 2, 1)
+        end_date = datetime.date.fromisoformat(end_date) if isinstance(end_date, str) else end_date or datetime.date(2025, 3, 31)
+        segment_id = segment_id if segment_id is not None else 0
 
-        return start_date, end_date
+        return start_date, end_date, segment_id
 
     @log_execution
     async def fetch_initial_data(
@@ -79,10 +79,7 @@ class DBFetcher:
     ) -> tuple[ForecastTestResult, list[int]]:
         logger.info("Starting database fetching...")
 
-        if segment_id is None:
-            segment_id = 0
-
-        start_date, end_date = self._ensure_dates(start_date, end_date)
+        start_date, end_date, segment_id = self._ensure_dates(start_date, end_date, segment_id)
 
         forecast_overall = await self._fetch_forecast_overall(start_date, end_date, segment_id)
         top_offenders = await self._fetch_top_offenders(start_date, end_date, segment_id)
@@ -112,10 +109,7 @@ class DBFetcher:
         """Fetch forecast_overall and top_offenders_details for given item_ids."""
         logger.info("Starting test run data fetching...")
 
-        if segment_id is None:
-            segment_id = 0
-
-        start_date, end_date = self._ensure_dates(start_date, end_date)
+        start_date, end_date, segment_id = self._ensure_dates(start_date, end_date, segment_id)
 
         # Fetch overall forecast
         forecast_overall = await self._fetch_forecast_overall(start_date, end_date, segment_id)
