@@ -62,10 +62,20 @@ class DBFetcher:
             end_date: Optional[str],
             segment_id: Optional[int]
     ) -> tuple[datetime.date, datetime.date, int]:
-        """Ensure that dates are datetime.date, and segment_id is int."""
+        """Ensure that dates are valid datetime.date and segment_id is int."""
 
-        start_date = datetime.date.fromisoformat(start_date) if isinstance(start_date, str) else start_date or datetime.date(2025, 2, 1)
-        end_date = datetime.date.fromisoformat(end_date) if isinstance(end_date, str) else end_date or datetime.date(2025, 3, 31)
+        def parse_date(value: Optional[str], default: datetime.date) -> datetime.date:
+            if value is None:
+                return default
+            if isinstance(value, datetime.date):
+                return value
+            try:
+                return datetime.date.fromisoformat(value)
+            except ValueError:
+                raise ValueError(f"Invalid date format: '{value}'. Expected format 'YYYY-MM-DD'.")
+
+        start_date = parse_date(start_date, datetime.date(2025, 2, 1))
+        end_date = parse_date(end_date, datetime.date(2025, 3, 31))
         segment_id = segment_id if segment_id is not None else 0
 
         return start_date, end_date, segment_id
