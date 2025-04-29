@@ -80,6 +80,7 @@ poetry run uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload
 - After each test, model parameters are automatically restored to their original state.
 - Forecasting errors are logged but do not interrupt the testing sequence.
 - The application is intended primarily for internal/company network use.
+- **All examples and queries are generic and do not reflect any real company data.**
 
 ---
 
