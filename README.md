@@ -1,8 +1,9 @@
 # Forecast Testing Tool
 
-This project is designed to automate forecasting model testing by sending test requests, adjusting model parameters, saving results to Excel/JSON, and backing up the database state.
+This project automates the testing of forecasting models by sending test requests, adjusting model parameters, saving results in Excel/JSON formats, and backing up the database state.
+---
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 tester/
@@ -26,21 +27,26 @@ tester/
 
 ## Installation
 
-Clone the repository and navigate into the project:
-
+1. **Clone the repository** and navigate into the project directory:
 ```bash
 
-cd tester
+   git clone https://github.com/VladimirKomov/model_testing_arima.git
+   cd model_testing_arima/tester
 ```
 
-Install dependencies using Poetry:
-
+2. **Install dependencies** using Poetry:
 ```bash
 
 poetry install
 ```
 
-Configure database and other settings inside `.env` file.
+3. **Activate the virtual environment** created by Poetry:
+```bash
+
+poetry shell
+```
+
+Configure database and other settings inside `.env` (just rename .env.exaple and add your data)file.
 
 
 ## Running the Application
@@ -66,17 +72,14 @@ poetry run uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload
 - Organized backup folders by date
 
 
-## Notes
+## Important Notes
 
-- Results are stored under `/forecast_test_results.<date>/`
-- Backups are stored under `/forecast_test_backups.<date>/`
-- Large tables (millions of rows) might take some time to backup.
-
-## Notes_2
-- Full ds_data backups may be slow for large tables (2M+ rows).
-- Parameter values are always reverted to original after each test.
-- Forecasting errors are logged but won't stop the test sequence.
-- The service is designed primarily for internal/company network use.
+- Test results are saved under `/forecast_test_results.<date>/`
+- Database backups are saved under `/forecast_test_backups.<date>/`
+- Backing up large tables (millions of rows) may take a significant amount of time.
+- After each test, model parameters are automatically restored to their original state.
+- Forecasting errors are logged but do not interrupt the testing sequence.
+- The application is intended primarily for internal/company network use.
 
 ---
 
@@ -84,3 +87,7 @@ If you encounter any issues, check the logs inside the `/logs/` directory.
 
 Happy Testing! 🚀
 
+## 🔗 Author
+
+- Vladimir Komov — [LinkedIn Profile](https://www.linkedin.com/in/vladkomov/)
+- Feel free to connect with me on LinkedIn!
