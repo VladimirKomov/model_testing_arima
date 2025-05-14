@@ -90,5 +90,5 @@ Happy Testing! 🚀
 
 ## 🔗 Author
 
-- Vladimir Komov — [LinkedIn Profile](https://www.linkedin.com/in/vladkomov/)
+- Vladimir Komov — [LinkedIn Profile](https://www.linkedin.com/in/vladimir-komov-a20a6931b/)
 - Feel free to connect with me on LinkedIn!
